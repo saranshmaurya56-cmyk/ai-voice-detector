@@ -9,10 +9,17 @@ app = FastAPI()
 
 API_KEY = "hackathon-secret-key"
 
-# Load model globally (important for Railway)
-print("Loading model at startup...")
-detector = VoiceDetector()
-print("Model loaded!")
+# Lazy model loader (VERY IMPORTANT for Railway)
+detector = None
+
+def get_detector():
+    global detector
+    if detector is None:
+        print("Loading model for first request...")
+        detector = VoiceDetector()
+        print("Model loaded!")
+    return detector
+
 
 class AudioRequest(BaseModel):
     audio_base64: str
@@ -26,7 +33,6 @@ def home():
 @app.post("/detect")
 def detect_audio(data: AudioRequest, x_api_key: str = Header(None)):
 
-    # API key check
     if x_api_key != API_KEY:
         raise HTTPException(status_code=401, detail="Invalid API key")
 
@@ -39,10 +45,10 @@ def detect_audio(data: AudioRequest, x_api_key: str = Header(None)):
         with open(filename, "wb") as f:
             f.write(audio_bytes)
 
-        # run detector
-        label, confidence = detector.predict(filename)
+        # LAZY LOAD MODEL HERE
+        model = get_detector()
+        label, confidence = model.predict(filename)
 
-        # delete temp file
         os.remove(filename)
 
         return {
