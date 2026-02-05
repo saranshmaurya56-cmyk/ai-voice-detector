@@ -1,17 +1,13 @@
 import sys
+import torch
 import librosa
+from transformers import AutoFeatureExtractor, AutoModel
 
 MODEL_NAME = "facebook/wav2vec2-large-xlsr-53"
 
 class VoiceDetector:
     def __init__(self):
         print("Loading multilingual speech model...")
-
-        # 🔥 Lazy imports (VERY IMPORTANT for Railway)
-        import torch
-        from transformers import AutoFeatureExtractor, AutoModel
-
-        self.torch = torch
         self.extractor = AutoFeatureExtractor.from_pretrained(MODEL_NAME)
         self.model = AutoModel.from_pretrained(MODEL_NAME)
         self.model.eval()
@@ -25,12 +21,12 @@ class VoiceDetector:
 
         inputs = self.extractor(audio, sampling_rate=sr, return_tensors="pt")
 
-        with self.torch.no_grad():
+        with torch.no_grad():
             outputs = self.model(**inputs)
             embeddings = outputs.last_hidden_state
 
         # Simple heuristic score (demo deepfake detection)
-        score = self.torch.mean(self.torch.abs(embeddings)).item()
+        score = torch.mean(torch.abs(embeddings)).item()
 
         if score > 0.6:
             label = "AI_GENERATED"
@@ -44,7 +40,7 @@ class VoiceDetector:
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python detector.py file.wav")
+        print("Usage: python detector.py file.mp3")
         return
 
     file_path = sys.argv[1]
