@@ -1,7 +1,9 @@
 fastapi
 uvicorn
+torch
 transformers
 librosa
 numpy
 soundfile
 pydub
+
