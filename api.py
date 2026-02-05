@@ -9,15 +9,10 @@ app = FastAPI()
 
 API_KEY = "hackathon-secret-key"
 
-detector = None
-
-def get_detector():
-    global detector
-    if detector is None:
-        detector = VoiceDetector()
-    return detector
-
-
+# Load model globally (important for Railway)
+print("Loading model at startup...")
+detector = VoiceDetector()
+print("Model loaded!")
 
 class AudioRequest(BaseModel):
     audio_base64: str
@@ -30,6 +25,7 @@ def home():
 
 @app.post("/detect")
 def detect_audio(data: AudioRequest, x_api_key: str = Header(None)):
+
     # API key check
     if x_api_key != API_KEY:
         raise HTTPException(status_code=401, detail="Invalid API key")
@@ -51,7 +47,7 @@ def detect_audio(data: AudioRequest, x_api_key: str = Header(None)):
 
         return {
             "result": label,
-            "confidence": round(confidence, 3)
+            "confidence": round(float(confidence), 3)
         }
 
     except Exception as e:
