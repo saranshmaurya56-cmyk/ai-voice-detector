@@ -9,7 +9,14 @@ app = FastAPI()
 
 API_KEY = "hackathon-secret-key"
 
-detector = VoiceDetector()
+detector = None
+
+def get_detector():
+    global detector
+    if detector is None:
+        detector = VoiceDetector()
+    return detector
+
 
 
 class AudioRequest(BaseModel):
